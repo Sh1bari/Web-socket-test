@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import Stomp from 'stompjs';
 
 interface Message {
@@ -23,7 +23,7 @@ const WebSocketComponent: React.FC = () => {
 
     stomp.connect(headers, () => {
       console.log('WebSocket connected');
-      stomp.subscribe('/topic/user/1', (message) => {
+      stomp.subscribe('/topic/configuration/1', (message) => {
         const receivedMessage: Message = JSON.parse(message.body);
         setReceivedMessages((prevMessages) => [...prevMessages, receivedMessage.content]);
       }, headers);
@@ -33,7 +33,7 @@ const WebSocketComponent: React.FC = () => {
   const handleSendMessage = () => {
     if (inputMessage.trim() !== '' && stompClient) {
   
-      stompClient.send('/app/sendMessage/1', headers, JSON.stringify({ message: inputMessage }));
+      stompClient.send('/app/configuration/1', headers, JSON.stringify({ message: inputMessage }));
       setInputMessage('');
     }
   };
