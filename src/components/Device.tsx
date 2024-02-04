@@ -121,7 +121,17 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
   };
 
   const handleConfigurationSubscription = (message: any) => {
-    console.log("Configuration message received:", message);
+    const statusUpdate = JSON.parse(message.body);
+
+    setCurDevice((prevDevice) => ({
+        ...prevDevice,
+        deviceConfiguration: {
+          recordingResolution: statusUpdate.recordingResolution,
+          recordingSource: statusUpdate.recordingSource,
+          recordingMode: statusUpdate.recordingMode,
+          uploadMode: statusUpdate.uploadMode,
+        },
+      }));
     // Логика обработки сообщения...
   };
 
