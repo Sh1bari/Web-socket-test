@@ -3,6 +3,8 @@ import { Card, Badge, Button, Collapse, Table, Modal } from "react-bootstrap";
 import { useWebSocket } from "./global/WebSocketProvider";
 import QRCode from "../modals/QRCode";
 import api from "../API/api";
+import * as Enums from "../enums/DeviceConfigurationEnum";
+import DropdownList from "./global/DropdownList";
 
 interface DeviceProps {
   device: Device;
@@ -21,20 +23,21 @@ interface Device {
 }
 
 interface NewDevice {
-    deviceId: number;
-    userId: number;
-    token: string;
-  }
-  
-  const initialNewDevice: NewDevice = {
-    deviceId: 0, // значение по умолчанию для deviceId
-    userId: 0, // значение по умолчанию для userId
-    token: "", // значение по умолчанию для token
-  };
+  deviceId: number;
+  userId: number;
+  token: string;
+}
+
+const initialNewDevice: NewDevice = {
+  deviceId: 0, // значение по умолчанию для deviceId
+  userId: 0, // значение по умолчанию для userId
+  token: "", // значение по умолчанию для token
+};
 
 const Device: React.FC<DeviceProps> = ({ device }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [newDevice, setNewDevice] = useState<NewDevice>(initialNewDevice);
+  const [curDevice, setCurDevice] = useState<Device>(device);
   const { stompClient } = useWebSocket();
   const [subscription, setSubscription] = useState<{
     unsubscribe: () => void;
@@ -42,14 +45,70 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
   const [currentStatus, setCurrentStatus] = useState(
     device.deviceCurrentStatus
   );
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [globalStatus, setGlobalStatus] = useState(device.deviceGlobalStatus);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
   const getStatusBadgeVariant = (status: string): string => {
     return status === "ONLINE" ? "success" : "danger";
   };
 
+  const handleRecordingResolutionChange = (value: string) => {
+    setCurDevice((prevDevice) => ({
+      ...prevDevice,
+      deviceConfiguration: {
+        ...prevDevice.deviceConfiguration,
+        recordingResolution: value as Enums.RecordingResolution,
+      },
+    }));
+    updateDeviceConfiguration('recording-resolution', 'recordingResolution', value);
+  };
+
+  const handleRecordingSourceChange = (value: string) => {
+    setCurDevice((prevDevice) => ({
+      ...prevDevice,
+      deviceConfiguration: {
+        ...prevDevice.deviceConfiguration,
+        recordingSource: value as Enums.RecordingSource,
+      },
+    }));
+    updateDeviceConfiguration('recording-source', 'recordingSource', value);
+  };
+
+  const handleRecordingModeChange = (value: string) => {
+    setCurDevice((prevDevice) => ({
+      ...prevDevice,
+      deviceConfiguration: {
+        ...prevDevice.deviceConfiguration,
+        recordingMode: value as Enums.RecordingMode,
+      },
+    }));
+    updateDeviceConfiguration('recording-mode', 'recordingMode', value);
+  };
+
+  const handleUploadModeChange = (value: string) => {
+    setCurDevice((prevDevice) => ({
+      ...prevDevice,
+      deviceConfiguration: {
+        ...prevDevice.deviceConfiguration,
+        uploadMode: value as Enums.UploadMode,
+      },
+    }));
+    updateDeviceConfiguration('upload-mode', 'uploadMode', value);
+  };
+
+  const updateDeviceConfiguration = async (configuration:string, configurationName:string, configurationValue: string) => {
+    try {
+      const response = await api.patch(
+        `/device/configuration/${configuration}?deviceId=${curDevice.id}&${configurationName}=${configurationValue}`
+      );
+      setNewDevice(response.data);
+    } catch (error) {
+      console.error("Error fetching filtered devices:", getErrorMessage(error));
+    }
+  };
+
   const renderGlobalStatusIcon = (): React.ReactNode => {
-    switch (device.deviceGlobalStatus) {
+    switch (globalStatus) {
       case "ACTIVE":
         return <Badge bg="success">Active ✔</Badge>;
       case "BANNED":
@@ -125,8 +184,28 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
 
   const getRegistrationTokenById = async () => {
     try {
-      const response = await api.get(`/admin/device/register-token?deviceId=${device.id}`);
+      const response = await api.get(
+        `/admin/device/register-token?deviceId=${device.id}`
+      );
       setNewDevice(response.data);
+    } catch (error) {
+      console.error("Error fetching filtered devices:", getErrorMessage(error));
+    }
+  };
+
+  const banDeviceById = async () => {
+    try {
+      const response = await api.post(`/admin/device/${device.id}/ban`);
+      setGlobalStatus(response.data.deviceGlobalStatus);
+    } catch (error) {
+      console.error("Error fetching filtered devices:", getErrorMessage(error));
+    }
+  };
+
+  const recoverDeviceById = async () => {
+    try {
+      const response = await api.post(`/admin/device/${device.id}/recover`);
+      setGlobalStatus(response.data.deviceGlobalStatus);
     } catch (error) {
       console.error("Error fetching filtered devices:", getErrorMessage(error));
     }
@@ -144,18 +223,26 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
 
   const handleDetailsClick = () => {
     getRegistrationTokenById();
-    setIsModalOpen(true);
+    setIsQRModalOpen(true);
+  };
+
+  const handleBanDevice = () => {
+    banDeviceById();
+  };
+
+  const handleRecoverDevice = () => {
+    recoverDeviceById();
   };
 
   const handleClose = () => {
-    setIsModalOpen(false);
+    setIsQRModalOpen(false);
   };
 
   return (
     <Card style={{ marginBottom: "10px", borderRadius: "10px" }}>
       <Card.Body>
         <Card.Title>
-          Device ID: {device.id}{" "}
+          Device ID: {curDevice.id}{" "}
           <Badge bg={getStatusBadgeVariant(currentStatus)}>
             {currentStatus}
           </Badge>
@@ -177,38 +264,92 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
                   </td>
                   <td style={{ display: "flex", alignItems: "center" }}>
                     {renderGlobalStatusIcon()}
-                    {device.deviceGlobalStatus === "WAITING_FOR_ACTIVATION" && (
+                    {globalStatus === "WAITING_FOR_ACTIVATION" && (
                       <div style={{ marginLeft: "30%" }}>
                         <Button variant="primary" onClick={handleDetailsClick}>
                           QR code
                         </Button>
                       </div>
                     )}
+                    {globalStatus === "ACTIVE" && (
+                      <div style={{ marginLeft: "30%" }}>
+                        <Button variant="danger" onClick={handleBanDevice}>
+                          Ban
+                        </Button>
+                      </div>
+                    )}
+                    {globalStatus === "BANNED" && (
+                      <div style={{ marginLeft: "30%" }}>
+                        <Button variant="success" onClick={handleRecoverDevice}>
+                          Recover
+                        </Button>
+                      </div>
+                    )}
                   </td>
                 </tr>
                 <tr>
-                  <td>
-                    <strong>Recording Resolution:</strong>
+                  <td style={{ width: "50%" }}>
+                    <strong>Recording Source:</strong>{" "}
                   </td>
-                  <td>{device.deviceConfiguration.recordingResolution}</td>
+                  <td style={{ width: "50%" }}>
+                    <div className="input-group" style={{ width: "100%" }}>
+                      <DropdownList
+                        selectedValue={
+                          curDevice.deviceConfiguration.recordingResolution
+                        }
+                        options={Object.values(Enums.RecordingResolution)}
+                        onSelect={(value) =>
+                          handleRecordingResolutionChange(value)
+                        }
+                      />
+                    </div>
+                  </td>
                 </tr>
                 <tr>
-                  <td>
-                    <strong>Recording Source:</strong>
+                  <td style={{ width: "50%" }}>
+                    <strong>Recording Source:</strong>{" "}
                   </td>
-                  <td>{device.deviceConfiguration.recordingSource}</td>
+                  <td style={{ width: "50%" }}>
+                    <div className="input-group" style={{ width: "100%" }}>
+                      <DropdownList
+                        selectedValue={
+                          curDevice.deviceConfiguration.recordingSource
+                        }
+                        options={Object.values(Enums.RecordingSource)}
+                        onSelect={(value) => handleRecordingSourceChange(value)}
+                      />
+                    </div>
+                  </td>
                 </tr>
                 <tr>
-                  <td>
-                    <strong>Recording Mode:</strong>
+                  <td style={{ width: "50%" }}>
+                    <strong>Recording Mode:</strong>{" "}
                   </td>
-                  <td>{device.deviceConfiguration.recordingMode}</td>
+                  <td style={{ width: "50%" }}>
+                    <div className="input-group" style={{ width: "100%" }}>
+                      <DropdownList
+                        selectedValue={
+                          curDevice.deviceConfiguration.recordingMode
+                        }
+                        options={Object.values(Enums.RecordingMode)}
+                        onSelect={(value) => handleRecordingModeChange(value)}
+                      />
+                    </div>
+                  </td>
                 </tr>
                 <tr>
-                  <td>
-                    <strong>Upload Mode:</strong>
+                  <td style={{ width: "50%" }}>
+                    <strong>Upload Mode:</strong>{" "}
                   </td>
-                  <td>{device.deviceConfiguration.uploadMode}</td>
+                  <td style={{ width: "50%" }}>
+                    <div className="input-group" style={{ width: "100%" }}>
+                      <DropdownList
+                        selectedValue={curDevice.deviceConfiguration.uploadMode}
+                        options={Object.values(Enums.UploadMode)}
+                        onSelect={(value) => handleUploadModeChange(value)}
+                      />
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </Table>
@@ -216,7 +357,7 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
         </Collapse>
       </Card.Body>
 
-      <Modal show={isModalOpen} onHide={handleClose}>
+      <Modal show={isQRModalOpen} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Device Id: {newDevice.deviceId}</Modal.Title>
         </Modal.Header>
@@ -229,7 +370,6 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
           </Button>
         </Modal.Footer>
       </Modal>
-
     </Card>
   );
 };
