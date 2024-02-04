@@ -7,7 +7,7 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "types": ["node", "sockjs-client", "stompjs"],
+    "types": ["node", "sockjs-client", "stompjs", "dom-to-image", "file-saver"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
