@@ -6,6 +6,8 @@ import api from "../API/api";
 import * as Enums from "../enums/DeviceConfigurationEnum";
 import DropdownList from "./global/DropdownList";
 import { Subscription } from "stompjs";
+import { useDispatch } from "react-redux";
+import { setOpenDeviceId } from "../redux/reducers/deviceReducer";
 
 interface DeviceProps {
   device: Device;
@@ -46,6 +48,8 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
   const [globalStatus, setGlobalStatus] = useState(device.deviceGlobalStatus);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
+  const dispatch = useDispatch();
+
   const getStatusBadgeVariant = (status: string): string => {
     return status === "ONLINE" ? "success" : "danger";
   };
@@ -58,7 +62,11 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
         recordingResolution: value as Enums.RecordingResolution,
       },
     }));
-    updateDeviceConfiguration('recording-resolution', 'recordingResolution', value);
+    updateDeviceConfiguration(
+      "recording-resolution",
+      "recordingResolution",
+      value
+    );
   };
 
   const handleRecordingSourceChange = (value: string) => {
@@ -69,7 +77,7 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
         recordingSource: value as Enums.RecordingSource,
       },
     }));
-    updateDeviceConfiguration('recording-source', 'recordingSource', value);
+    updateDeviceConfiguration("recording-source", "recordingSource", value);
   };
 
   const handleRecordingModeChange = (value: string) => {
@@ -80,7 +88,7 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
         recordingMode: value as Enums.RecordingMode,
       },
     }));
-    updateDeviceConfiguration('recording-mode', 'recordingMode', value);
+    updateDeviceConfiguration("recording-mode", "recordingMode", value);
   };
 
   const handleUploadModeChange = (value: string) => {
@@ -91,10 +99,14 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
         uploadMode: value as Enums.UploadMode,
       },
     }));
-    updateDeviceConfiguration('upload-mode', 'uploadMode', value);
+    updateDeviceConfiguration("upload-mode", "uploadMode", value);
   };
 
-  const updateDeviceConfiguration = async (configuration:string, configurationName:string, configurationValue: string) => {
+  const updateDeviceConfiguration = async (
+    configuration: string,
+    configurationName: string,
+    configurationValue: string
+  ) => {
     try {
       const response = await api.patch(
         `/device/configuration/${configuration}?deviceId=${curDevice.id}&${configurationName}=${configurationValue}`
@@ -122,14 +134,14 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
     const statusUpdate = JSON.parse(message.body);
 
     setCurDevice((prevDevice) => ({
-        ...prevDevice,
-        deviceConfiguration: {
-          recordingResolution: statusUpdate.recordingResolution,
-          recordingSource: statusUpdate.recordingSource,
-          recordingMode: statusUpdate.recordingMode,
-          uploadMode: statusUpdate.uploadMode,
-        },
-      }));
+      ...prevDevice,
+      deviceConfiguration: {
+        recordingResolution: statusUpdate.recordingResolution,
+        recordingSource: statusUpdate.recordingSource,
+        recordingMode: statusUpdate.recordingMode,
+        uploadMode: statusUpdate.uploadMode,
+      },
+    }));
     // Логика обработки сообщения...
   };
 
@@ -158,11 +170,7 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
               `/topic/currentStatus/${deviceId}`,
               handleCurrentStatusSubscription
             );
-
           } catch (error) {
-            // Логируем ошибку в консоль
-            //console.error("Error while connecting:", error);
-            // Повторяем попытку через 100 миллисекунд
             setTimeout(tryConnect, 100);
           }
         };
@@ -249,7 +257,10 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
         </Card.Title>
         <Button
           variant="link"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            setIsOpen(!isOpen);
+            isOpen ? dispatch(setOpenDeviceId(0)) : dispatch(setOpenDeviceId(curDevice.id));
+          }}
           style={{ position: "absolute", top: "15px", right: "15px" }}
         >
           {isOpen ? "Hide Details" : "Show Details"}

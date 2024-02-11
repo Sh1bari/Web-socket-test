@@ -4,6 +4,8 @@ import api from "../API/api";
 import Device from "../components/Device";
 import CustomPagination from "../components/global/CustomPagination";
 import QRCode from "../modals/QRCode";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
 
 interface DeviceInterface {
   id: number;
@@ -100,11 +102,13 @@ const Devices: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  const openDeviceId = useSelector((state: RootState) => state.device.openDeviceId);
   return (
     <>
       <Container className="mt-5">
-        <Row className="justify-content-center">
-          <Col xs={8}>
+        <Row>
+          {/* Секция фильтра и устройств слева */}
+          <Col md={6}>
             <div className="bg-light p-4 border rounded mb-4">
               <Form>
                 <Form.Group controlId="globalStatus">
@@ -159,22 +163,32 @@ const Devices: React.FC = () => {
               />
             )}
           </Col>
-        </Row>
-      </Container>
 
-      <Modal show={isModalOpen} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Device Id: {newDevice.deviceId}{newDevice.deviceId}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <QRCode data={newDevice.token} />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Закрыть
-          </Button>
-        </Modal.Footer>
-      </Modal>
+          {/* Секция пустой карточки справа */}
+          <Col md={6}>
+            <div className="card">
+              <div className="card-header">Пустая карточка</div>
+              <div className="card-body">
+                <p className="card-text">{openDeviceId}</p>
+              </div>
+            </div>
+          </Col>
+        </Row>
+
+        <Modal show={isModalOpen} onHide={handleClose}>
+          <Modal.Header closeButton>
+            <Modal.Title>Device Id: {newDevice.deviceId}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <QRCode data={newDevice.token} />
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleClose}>
+              Закрыть
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </Container>
     </>
   );
 };
