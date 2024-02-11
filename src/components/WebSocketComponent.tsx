@@ -10,10 +10,10 @@ const WebSocketComponent: React.FC = () => {
   const [receivedMessages, setReceivedMessages] = useState<string[]>([]);
   const [stompClient, setStompClient] = useState<Stomp.Client | null>(null);
 
-  const socketUrl = 'http://35.195.246.213/api/ws'; // Замените на ваш URL сервера WebSocket
+  const socketUrl = 'http://localhost:8082/api/ws'; // Замените на ваш URL сервера WebSocket
 
   const headers = {
-    Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMCIsInN1YlR5cGUiOiJkZXZpY2UiLCJ0b2tlblR5cGUiOiJhY2Nlc3MtdG9rZW4iLCJkZXZpY2VJZCI6IjQiLCJpYXQiOjE3MDY3MDg2OTR9.r5SYCh5PuO4Dt2MZuh3vG2SHtqfGQsYdxGkfVSjm0CE` // Замените на ваш токен аутентификации
+    Authorization: `Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwic3ViVHlwZSI6ImRldmljZSIsInRva2VuVHlwZSI6ImFjY2Vzcy10b2tlbiIsImRldmljZUlkIjoiMSIsImlhdCI6MTcwNjkxNDAwMn0.Lk3wuM7_QQ8YxgmUs4eZfXf5PB8BFaOZc0uLR6aaDK8` // Замените на ваш токен аутентификации
   };
 
   const handleConnect = () => {

@@ -5,6 +5,7 @@ import QRCode from "../modals/QRCode";
 import api from "../API/api";
 import * as Enums from "../enums/DeviceConfigurationEnum";
 import DropdownList from "./global/DropdownList";
+import { Subscription } from "stompjs";
 
 interface DeviceProps {
   device: Device;
@@ -39,9 +40,6 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
   const [newDevice, setNewDevice] = useState<NewDevice>(initialNewDevice);
   const [curDevice, setCurDevice] = useState<Device>(device);
   const { stompClient } = useWebSocket();
-  const [subscription, setSubscription] = useState<{
-    unsubscribe: () => void;
-  } | null>(null);
   const [currentStatus, setCurrentStatus] = useState(
     device.deviceCurrentStatus
   );
@@ -142,6 +140,9 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
     setCurrentStatus(statusUpdate.status);
   };
 
+  let configSubscription: Subscription | null = null;
+  let statusSubscription: Subscription | null = null;
+
   useEffect(() => {
     const connectAndSubscribe = () => {
       if (stompClient) {
@@ -149,25 +150,15 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
 
         const tryConnect = () => {
           try {
-            const configSubscription = stompClient.subscribe(
+            configSubscription = stompClient.subscribe(
               `/topic/configuration/${deviceId}`,
               handleConfigurationSubscription
             );
-            const statusSubscription = stompClient.subscribe(
+            statusSubscription = stompClient.subscribe(
               `/topic/currentStatus/${deviceId}`,
               handleCurrentStatusSubscription
             );
 
-            // Используйте функциональный аргумент для обновления стейта
-            setSubscription((prevSubscription) => ({
-              unsubscribe: () => {
-                if (prevSubscription) {
-                  prevSubscription.unsubscribe();
-                }
-                configSubscription.unsubscribe();
-                statusSubscription.unsubscribe();
-              },
-            }));
           } catch (error) {
             // Логируем ошибку в консоль
             //console.error("Error while connecting:", error);
@@ -186,9 +177,8 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
 
     // Возвращаем функцию отписки
     return () => {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
+      configSubscription?.unsubscribe();
+      statusSubscription?.unsubscribe();
     };
   }, [stompClient]);
 
