@@ -9,7 +9,7 @@ interface DeviceState {
 }
 
 const initialState: DeviceState = {
-  openDeviceId: null,
+  openDeviceId: 0,
 };
 
 // Создаем редьюсер с помощью createReducer

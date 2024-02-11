@@ -4,8 +4,7 @@ import api from "../API/api";
 import Device from "../components/Device";
 import CustomPagination from "../components/global/CustomPagination";
 import QRCode from "../modals/QRCode";
-import { useSelector } from "react-redux";
-import { RootState } from "../redux/store";
+import Segments from "../components/Segments";
 
 interface DeviceInterface {
   id: number;
@@ -102,7 +101,6 @@ const Devices: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const openDeviceId = useSelector((state: RootState) => state.device.openDeviceId);
   return (
     <>
       <Container className="mt-5">
@@ -166,12 +164,7 @@ const Devices: React.FC = () => {
 
           {/* Секция пустой карточки справа */}
           <Col md={6}>
-            <div className="card">
-              <div className="card-header">Пустая карточка</div>
-              <div className="card-body">
-                <p className="card-text">{openDeviceId}</p>
-              </div>
-            </div>
+            <Segments/>
           </Col>
         </Row>
 

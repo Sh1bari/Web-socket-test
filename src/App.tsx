@@ -1,8 +1,9 @@
 import "./App.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import WebSocketComponent from "./components/WebSocketComponent";
+import WebSocketComponent from "./pages/WebSocketComponent";
 import Header from "./components/global/Header";
 import Devices from "./pages/Devices";
+import DeviceExample from "./pages/DeviceExample";
 
 const App: React.FC = () => {
   return (
@@ -17,7 +18,22 @@ const App: React.FC = () => {
             </div>
           }
         />
-        <Route path="/socket" element={<WebSocketComponent />} />
+        <Route
+          path="/socket"
+          element={
+            <div style={{ width: "100vw" }}>
+              <WebSocketComponent />
+            </div>
+          }
+        />
+        <Route
+          path="/device"
+          element={
+            <div style={{ width: "100vw" }}>
+              <DeviceExample />
+            </div>
+          }
+        />
         {/* Add other routes as needed */}
       </Routes>
     </Router>
