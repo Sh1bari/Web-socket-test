@@ -190,6 +190,25 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
     };
   }, [stompClient]);
 
+  const startSendingSegments = async (deviceId: number) => {
+    try {
+      await api.post(
+        `/admin/device/${deviceId}/command/start-sending-segments-data`
+      );
+    } catch (error: any) {
+      if (error.response && error.response.status === 409) {
+        // Обработка ошибки 409 (Conflict)
+        window.alert(error.response.data.message);
+      } else {
+        // Обработка других ошибок
+        console.error(
+          "Error fetching filtered devices:",
+          getErrorMessage(error)
+        );
+      }
+    }
+  };
+
   const getRegistrationTokenById = async () => {
     try {
       const response = await api.get(
@@ -259,7 +278,14 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
           variant="link"
           onClick={() => {
             setIsOpen(!isOpen);
-            isOpen ? dispatch(setOpenDeviceId(0)) : dispatch(setOpenDeviceId(curDevice.id));
+            {
+              isOpen
+                ? dispatch(setOpenDeviceId(0))
+                : dispatch(setOpenDeviceId(curDevice.id));
+            }
+            {
+              isOpen ? null : startSendingSegments(curDevice.id);
+            }
           }}
           style={{ position: "absolute", top: "15px", right: "15px" }}
         >
