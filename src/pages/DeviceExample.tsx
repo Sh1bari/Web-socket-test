@@ -38,24 +38,33 @@ const DeviceExample: React.FC = () => {
     let intervalId: NodeJS.Timeout;
 
     const sendSegments = () => {
-      // Здесь можно сгенерировать произвольные значения для каждого поля
-      const randomSegment: SegmentWebSocketData = {
-        segmentName: "Segment123",
-        durationMillis: Math.random() * 10000,
-        status: "COMPLETED",
-        startRecording: new Date().toISOString(),
-        recordingSource: "RS_REAR",
-        recordingResolution: "RES_480p",
-        recordingMode: "RECORD_ALWAYS",
-      };
+      // Генерация случайного числа сегментов от 1 до 5
+      const numberOfSegments = Math.floor(Math.random() * 5) + 1;
+
+      // Создание массива сегментов
+      const segmentsArray: SegmentWebSocketData[] = [];
+
+      // Заполнение массива сегментов случайными значениями
+      for (let i = 0; i < numberOfSegments; i++) {
+        const randomSegment: SegmentWebSocketData = {
+          segmentName: `Segment${i + 1}`,
+          durationMillis: Math.random() * 10000,
+          status: "COMPLETED",
+          startRecording: new Date().toISOString(),
+          recordingSource: "RS_REAR",
+          recordingResolution: "RES_480p",
+          recordingMode: "RECORD_ALWAYS",
+        };
+        segmentsArray.push(randomSegment);
+      }
 
       const segmentsDto: SegmentsWebSocketDto = {
-        segments: [randomSegment],
+        segments: segmentsArray,
       };
 
       // Отправка данных на топик
       // Замените на ваш код отправки данных на топик
-      stompClient?.send('/app/segments/1',[], JSON.stringify(segmentsDto));
+      stompClient?.send("/app/segments/1", [], JSON.stringify(segmentsDto));
       console.log("Sending segments:", segmentsDto);
     };
 
@@ -67,7 +76,6 @@ const DeviceExample: React.FC = () => {
     // Очистка интервала при размонтировании компонента
     return () => clearInterval(intervalId);
   }, [sendingSegments]);
-
   let commandSubscription: Subscription | null = null;
 
   const handleCommandSubscription = (message: any) => {

@@ -6,8 +6,10 @@ import api from "../API/api";
 import * as Enums from "../enums/DeviceConfigurationEnum";
 import DropdownList from "./global/DropdownList";
 import { Subscription } from "stompjs";
-import { useDispatch } from "react-redux";
-import { setOpenDeviceId } from "../redux/reducers/deviceReducer";
+import { useDispatch, useSelector } from "react-redux";
+import { setIsOnline, setOpenDeviceId } from "../redux/reducers/deviceReducer";
+import { RootState } from "../redux/store";
+import { showErrorNotification } from "./global/Notification";
 
 interface DeviceProps {
   device: Device;
@@ -38,6 +40,7 @@ const initialNewDevice: NewDevice = {
 };
 
 const Device: React.FC<DeviceProps> = ({ device }) => {
+  const deviceId = useSelector((state: RootState) => state.device.openDeviceId);
   const [isOpen, setIsOpen] = useState(false);
   const [newDevice, setNewDevice] = useState<NewDevice>(initialNewDevice);
   const [curDevice, setCurDevice] = useState<Device>(device);
@@ -49,6 +52,14 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if(deviceId == device.id){
+      setIsOpen(true);
+    }else {
+      setIsOpen(false);
+    }
+  }, [deviceId]);
 
   const getStatusBadgeVariant = (status: string): string => {
     return status === "ONLINE" ? "success" : "danger";
@@ -190,15 +201,21 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
     };
   }, [stompClient]);
 
+  const handleShowError = (msg: string) => {
+    showErrorNotification(msg);
+  };
+
   const startSendingSegments = async (deviceId: number) => {
     try {
+      dispatch(setOpenDeviceId(curDevice.id));
       await api.post(
         `/admin/device/${deviceId}/command/start-sending-segments-data`
       );
+      dispatch(setIsOnline(true));
     } catch (error: any) {
       if (error.response && error.response.status === 409) {
-        // Обработка ошибки 409 (Conflict)
-        window.alert(error.response.data.message);
+        dispatch(setIsOnline(false));
+        handleShowError(error.response.data.message);
       } else {
         // Обработка других ошибок
         console.error(
@@ -281,10 +298,7 @@ const Device: React.FC<DeviceProps> = ({ device }) => {
             {
               isOpen
                 ? dispatch(setOpenDeviceId(0))
-                : dispatch(setOpenDeviceId(curDevice.id));
-            }
-            {
-              isOpen ? null : startSendingSegments(curDevice.id);
+                : startSendingSegments(curDevice.id);
             }
           }}
           style={{ position: "absolute", top: "15px", right: "15px" }}

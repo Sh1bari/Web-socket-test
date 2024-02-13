@@ -4,6 +4,7 @@ import WebSocketComponent from "./pages/WebSocketComponent";
 import Header from "./components/global/Header";
 import Devices from "./pages/Devices";
 import DeviceExample from "./pages/DeviceExample";
+import { ToastContainer } from "react-toastify";
 
 const App: React.FC = () => {
   return (
@@ -36,6 +37,7 @@ const App: React.FC = () => {
         />
         {/* Add other routes as needed */}
       </Routes>
+      <ToastContainer style={{ zIndex: 9999 }} />
     </Router>
   );
 };
