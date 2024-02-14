@@ -64,7 +64,7 @@ const DeviceExample: React.FC = () => {
 
       // Отправка данных на топик
       // Замените на ваш код отправки данных на топик
-      stompClient?.send("/app/segments/1", [], JSON.stringify(segmentsDto));
+      stompClient?.send("/app/segments/4", [], JSON.stringify(segmentsDto));
       console.log("Sending segments:", segmentsDto);
     };
 
@@ -99,7 +99,7 @@ const DeviceExample: React.FC = () => {
   useEffect(() => {
     const connectAndSubscribe = () => {
       if (stompClient) {
-        const deviceId = 1;
+        const deviceId = 4;
 
         const tryConnect = () => {
           try {
