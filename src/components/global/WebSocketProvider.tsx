@@ -19,7 +19,7 @@ const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
   useEffect(() => {
-    const socketUrl = 'http://35.195.246.213/api/ws';
+    const socketUrl = 'http://vr.cloudioti.com/api/ws';
     //const socketUrl = 'http://localhost:8082/api/ws';
     const headers = {
       Authorization: `Bearer ${localStorage.getItem('token') || ''}`,

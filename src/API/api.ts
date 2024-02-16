@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = 'http://35.195.246.213/api'; // Замените на свой базовый URL
+const baseURL = 'http://vr.cloudioti.com/api'; // Замените на свой базовый URL
 //const baseURL = 'http://localhost:8082/api';
 
 const api = axios.create({
